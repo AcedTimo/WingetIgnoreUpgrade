@@ -81,7 +81,13 @@ namespace WGetNET.HelperClasses
                         PackageVersion = output[i][versionStartIndex..extraInfoStartIndex].Trim()
                     });
                 }
-                catch { continue; }
+                catch 
+                {
+                    // In the hopes that we have hit the line containing: "x upgrades available."
+                    // We want to skip the next line as it contains invalid data but would still be treated as a package.
+                    i++;
+                    continue;
+                }
             }
 
             return resultList;
