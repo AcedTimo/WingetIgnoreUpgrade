@@ -67,7 +67,7 @@ namespace WingetUpgrade
                 Console.WriteLine();
             }
 
-            Console.WriteLine("\n[i] Process Complete");
+            Console.WriteLine("[i] Process Complete");
         }
     }
 }
