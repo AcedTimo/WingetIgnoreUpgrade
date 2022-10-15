@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using WGetNET;
 
@@ -10,8 +11,27 @@ namespace WingetUpgrade
 {
     internal class MainClass
     {
+        static bool skipUpdate()
+        {
+            try
+            {
+                Process[] wingetProcesses = Process.GetProcessesByName("winget");
+                foreach (Process process in wingetProcesses)
+                {
+                    process.Kill();
+                }
+
+                return true;
+            } catch { return false; }
+        }
+
         static void Main(string[] args)
         {
+            Console.CancelKeyPress += delegate(object? sender, ConsoleCancelEventArgs e) {
+                if (skipUpdate()) { Console.WriteLine("[i] User is skipping package.."); }
+                e.Cancel = true;
+            };
+
             WinGetPackageManager packageManager = new WinGetPackageManager();
             
             if (!packageManager.WinGetInstalled)
@@ -53,13 +73,16 @@ namespace WingetUpgrade
                     if (upgradeResult.Success) { Console.WriteLine("[i] Upgrade Successful"); }
                     else
                     {
-                        Console.WriteLine("[!] Upgrade Unsuccessful");
-                        Console.WriteLine("    Exit Code: " + upgradeResult.ExitCode);
-                        Console.WriteLine("    Output: ");
-
-                        foreach (string line in upgradeResult.Output)
+                        if (upgradeResult.ExitCode != -1) // Possibly skip on: -2147467260
                         {
-                            Console.WriteLine(line);
+                            Console.WriteLine("[!] Upgrade Unsuccessful");
+                            Console.WriteLine("    Exit Code: " + upgradeResult.ExitCode);
+                            Console.WriteLine("    Output: ");
+
+                            foreach (string line in upgradeResult.Output)
+                            {
+                                Console.WriteLine(line);
+                            }
                         }
                     }
                 }
@@ -67,7 +90,7 @@ namespace WingetUpgrade
                 Console.WriteLine();
             }
 
-            Console.WriteLine("[i] Process Complete");
+            Console.WriteLine("\n[i] Process Complete");
         }
     }
 }
